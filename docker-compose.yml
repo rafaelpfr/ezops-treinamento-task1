@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  mongo:
+    container_name: mongo
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - chat-volume:/data/db
+
+  app:
+    container_name: app
+    restart: always
+    build: .
+    image: project_app
+    environment:
+      - VIRTUAL_HOST=chat.local
+      - VIRTUAL_PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+
+volumes:
+  chat-volume:
