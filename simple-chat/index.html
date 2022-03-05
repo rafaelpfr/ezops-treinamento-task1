@@ -10,7 +10,7 @@
   <script src="https://kit.fontawesome.com/b76680652a.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<div class="container" style="width: 35%; padding-bottom:20px; margin-top: 20px; box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px; ">
+<div class="container" style="width: 35%; padding-bottom:20px; margin-top: 20px; box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;">
     <br>
     <div class="jumbotron" style="padding-bottom:20px">
         <h1 class="display-8" style="text-align: center;">Chat Online</h1>
@@ -29,11 +29,19 @@
 </div>
 <script>
   const colors = ['blue', 'green', 'brown', 'orange', 'purple']
+  const thumbsUpClass = "fa-solid fa-thumbs-up"
+  const thumbsDownClass = "fa-regular fa-thumbs-up"
   var socket = io();
 
   $(() => {
     $('body').on('click', 'a[data-id]', (e) => {
+      e.preventDefault()
       deleteMessage($(e.target).data('id'));
+    });
+
+    $('body').on('click', 'a[data-star]', (e) => {
+      e.preventDefault()
+      likeMessage($(e.target).data('star'));
     });
 
     $("#send").click(()=>{
@@ -48,19 +56,29 @@
   function addMessages(message){
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
       $("#messages").append(`
-      <div id=${message._id} style="box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px; padding-left: 5px; margin-bottom: 5px">
+      <div id=${message._id} style="box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px; padding-left: 15px; padding-right: 10px; margin-bottom: 15px; border-radius: 20px">
         <span style="color: ${randomColor}; font-size: 20px;"> 
           ${message.name}  
         </span> 
         <i style="color: ${randomColor}; font-size: 13px;text-align: center;"> 
-          disse às ${message.time} 
+          disse às ${message.time}:
         </i>
-        <a href="#" data-id="${message._id}" class="fa-solid fa-trash" style="color:red; padding: 0px 5px; border: none; background: none; margin-top: 5px; float: right;" ></a>
-        <p style="font-size: 13px;"> ${message.message} </p>
+        <div style="float: right; margin-right: 5px";>
+          <a href="#" data-star="${message._id}" title="Curtir" style="display: block; color:black; margin-top: 5px; text-decoration: none;" class="${message.isLiked ? thumbsUpClass : thumbsDownClass}"></a>
+          <a href="#" data-id="${message._id}"   title="Deletar" style="display: block; color:red; margin-top: 10px; text-decoration: none;" class="fa-solid fa-trash" ></a>
+        </div>
+        <p style="font-size: 13px; padding-bottom: 5px"> ${message.message} </p>
       </div>` 
       )
   }
 
+
+  function likeMessage(id){
+    $.post(`http://${window.location.host}/messages/update/` + id, (err, data) => {
+      let element = $(`#${id}`).find("a:first") 
+      element.attr('class').split(' ')[0] === "fa-regular" ? element.attr("class",`${thumbsUpClass}`) : element.attr("class",`${thumbsDownClass}`)
+    })
+  }
 
   function deleteMessage(id){
     $.post(`http://${window.location.host}/messages/delete/` + id, (err, data) => {
