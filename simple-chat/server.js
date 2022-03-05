@@ -15,7 +15,7 @@ var Message = mongoose.model('Message',{
   time: String,
 })
 
-var dbUrl = `mongodb://mongo:27017`
+var dbUrl = `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/test?authSource=admin`
 
 app.get('/messages', (req, res) => {
   Message.find({},(err, messages)=> {
