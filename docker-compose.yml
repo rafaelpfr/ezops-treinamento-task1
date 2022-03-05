@@ -7,14 +7,8 @@ services:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-
-  mongo:
-    container_name: mongo
-    image: mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - chat-volume:/data/db
+    networks:
+      - frontend
 
   app:
     container_name: app
@@ -24,10 +18,28 @@ services:
     environment:
       - VIRTUAL_HOST=chat.local
       - VIRTUAL_PORT=3000
-    ports:
-      - "3000:3000"
+    expose:    # strictly informational
+      - "3000"
     depends_on:
       - mongo
+    networks:
+      - frontend
+      - backend
+
+  mongo:
+    container_name: mongo
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - chat-volume:/data/db
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:
+    internal: true
 
 volumes:
   chat-volume:
