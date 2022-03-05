@@ -3,6 +3,7 @@ version: "3.7"
 services:
   nginx-proxy:
     image: jwilder/nginx-proxy
+    restart: on-failure:3    # Restart the container if it exits due to an error, which manifests as a non-zero exit code.
     ports:
       - "80:80"
     volumes:
@@ -12,14 +13,18 @@ services:
 
   app:
     container_name: app
-    restart: always
+    restart: on-failure:3            
     build: .
     image: project_app
+    # each request made to the proxy with chat.local in the Host header will be forwarded to this container and its response will be sent by the proxy to client
     environment:
       - VIRTUAL_HOST=chat.local
       - VIRTUAL_PORT=3000
+      - MONGO_INITDB_ROOT_USERNAME=$MONGO_INITDB_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
     expose:    # strictly informational
       - "3000"
+    stop_grace_period: 1m30s   # Specify how long to wait when attempting to stop a container before sending SIGKILL (default 10s)
     depends_on:
       - mongo
     networks:
@@ -29,8 +34,12 @@ services:
   mongo:
     container_name: mongo
     image: mongo
+    restart: on-failure:3
     ports:
       - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGO_INITDB_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
     volumes:
       - chat-volume:/data/db
     networks:
