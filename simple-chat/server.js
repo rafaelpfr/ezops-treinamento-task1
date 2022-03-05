@@ -13,6 +13,7 @@ var Message = mongoose.model('Message',{
   name : String,
   message : String,
   time: String,
+  isLiked: Boolean
 })
 
 var dbUrl = `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/test?authSource=admin`
@@ -32,6 +33,19 @@ app.get('/messages/:user', (req, res) => {
 })
 
 
+app.post('/messages/update/:user', async (req, res) => {
+
+  Message.findOne({ _id: req.params.user }, function(err, message) {
+    message.isLiked = !message.isLiked;
+    message.save(function(err, updatedBook) {
+      console.log('atualizou');
+    });
+  });
+
+  res.sendStatus(200);
+})
+
+
 app.post('/messages/delete/:user', async (req, res) => {
   Message.deleteOne({ _id: req.params.user }, function(err, user) {
     console.log('deletou');
@@ -42,8 +56,9 @@ app.post('/messages/delete/:user', async (req, res) => {
 
 
 app.post('/messages', async (req, res) => {
-  const date = new Date()
+  const date = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
   req.body.time = ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
+  req.body.isLiked = false
 
   try{
     var message = new Message(req.body);
